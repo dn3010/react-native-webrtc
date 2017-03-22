@@ -126,6 +126,21 @@ And set stream to RTCView
 container.setState({videoURL: stream.toURL()});
 ```
 ## Demo
+=======
+
+### Custom APIs
+
+#### MediaStreamTrack.prototype._switchCameras()
+
+This function allows to switch the front / back cameras in a video track
+on the fly, without the need for adding / removing tracks or renegotiating.
+
+## Demos
+
+**Official Demo**
+
+author: [@oney](https://github.com/oney)
+
 The demo project is https://github.com/oney/RCTWebRTCDemo   
 And you will need a signaling server. I have written a signaling server https://react-native-webrtc.herokuapp.com/ (the repository is https://github.com/oney/react-native-webrtc-server).   
 You can open this website in browser, and then set it as signaling server in the app, and run the app. After you enter the same room ID, the video stream will be connected.
