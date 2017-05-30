@@ -37,28 +37,6 @@ type RTCIceConnectionState =
   'disconnected' |
   'closed';
 
-/**
- * The default constraints of RTCPeerConnection's createOffer() and
- * createAnswer().
- */
-const DEFAULT_SDP_CONSTRAINTS = {
-  mandatory: {
-    OfferToReceiveAudio: true,
-    OfferToReceiveVideo: true,
-  },
-  optional: [],
-};
-
-/**
- * The default constraints of RTCPeerConnection's WebRTCModule.peerConnectionInit.
- */
-const DEFAULT_PC_CONSTRAINTS = {
-  mandatory: {},
-  optional: [
-    { DtlsSrtpKeyAgreement: true },
-  ],
-};
-
 const PEER_CONNECTION_EVENTS = [
   'connectionstatechange',
   'icecandidate',
@@ -107,10 +85,7 @@ export default class RTCPeerConnection extends EventTarget(PEER_CONNECTION_EVENT
   constructor(configuration) {
     super();
     this._peerConnectionId = nextPeerConnectionId++;
-    WebRTCModule.peerConnectionInit(
-        configuration,
-        DEFAULT_PC_CONSTRAINTS,
-        this._peerConnectionId);
+    WebRTCModule.peerConnectionInit(configuration, this._peerConnectionId);
     this._registerEvents();
   }
 
@@ -122,50 +97,26 @@ export default class RTCPeerConnection extends EventTarget(PEER_CONNECTION_EVENT
     WebRTCModule.peerConnectionRemoveStream(stream.reactTag, this._peerConnectionId);
   }
 
-  /**
-   * Merge custom constraints with the default one. The custom one take precedence.
-   *
-   * @param {Object} options - webrtc constraints
-   * @return {Object} constraints - merged webrtc constraints
-   */
-  _mergeMediaConstraints(options) {
-    const constraints = Object.assign({}, DEFAULT_SDP_CONSTRAINTS);
-    if (options) {
-      if (options.mandatory) {
-        constraints.mandatory = {...constraints.mandatory, ...options.mandatory};
+  createOffer(success: ?Function, failure: ?Function, constraints) {
+    WebRTCModule.peerConnectionCreateOffer(this._peerConnectionId, (successful, data) => {
+      if (successful) {
+        const sessionDescription = new RTCSessionDescription(data);
+        success(sessionDescription);
+      } else {
+        failure(data); // TODO: convert to NavigatorUserMediaError
       }
-      if (options.optional && Array.isArray(options.optional)) {
-        // `optional` is an array, webrtc only finds first and ignore the rest if duplicate.
-        constraints.optional = options.optional.concat(constraints.optional);
-      }
-    }
-    return constraints;
+    });
   }
 
-  createOffer(successCallback: ?Function, failureCallback: ?Function, options) {
-    WebRTCModule.peerConnectionCreateOffer(
-        this._peerConnectionId,
-        this._mergeMediaConstraints(options),
-        (successful, data) => {
-          if (successful) {
-            successCallback(new RTCSessionDescription(data));
-          } else {
-            failureCallback(data); // TODO: convert to NavigatorUserMediaError
-          }
-        });
-  }
-
-  createAnswer(successCallback: ?Function, failureCallback: ?Function, options) {
-    WebRTCModule.peerConnectionCreateAnswer(
-        this._peerConnectionId,
-        this._mergeMediaConstraints(options),
-        (successful, data) => {
-          if (successful) {
-            successCallback(new RTCSessionDescription(data));
-          } else {
-            failureCallback(data);
-          }
-        });
+  createAnswer(success: ?Function, failure: ?Function, constraints) {
+    WebRTCModule.peerConnectionCreateAnswer(this._peerConnectionId, (successful, data) => {
+      if (successful) {
+        const sessionDescription = new RTCSessionDescription(data);
+        success(sessionDescription);
+      } else {
+        failure(data);
+      }
+    });
   }
 
   setConfiguration(configuration) {
