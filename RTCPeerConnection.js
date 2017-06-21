@@ -78,6 +78,8 @@ const PEER_CONNECTION_EVENTS = [
 
 let nextPeerConnectionId = 0;
 
+let log = console.log.bind(console);
+
 export default class RTCPeerConnection extends EventTarget(PEER_CONNECTION_EVENTS) {
   localDescription: RTCSessionDescription;
   remoteDescription: RTCSessionDescription;
@@ -151,7 +153,7 @@ export default class RTCPeerConnection extends EventTarget(PEER_CONNECTION_EVENT
 
   setLocalDescription(sessionDescription: RTCSessionDescription, constraints) {
     return WebRTCModule.peerConnectionSetLocalDescription(
-      sessionDescription.toJSON(),
+      sessionDescription.toJSON ? sessionDescription.toJSON() : sessionDescription,
       this._peerConnectionId
     ).then(() => {
       this.localDescription = sessionDescription;
@@ -161,7 +163,7 @@ export default class RTCPeerConnection extends EventTarget(PEER_CONNECTION_EVENT
 
   setRemoteDescription(sessionDescription: RTCSessionDescription) {
     return WebRTCModule.peerConnectionSetRemoteDescription(
-      sessionDescription.toJSON(),
+      sessionDescription.toJSON ? sessionDescription.toJSON() : sessionDescription,
       this._peerConnectionId
     ).then(() => {
       this.remoteDescription = sessionDescription;
