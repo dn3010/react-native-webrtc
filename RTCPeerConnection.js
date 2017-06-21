@@ -76,6 +76,8 @@ const PEER_CONNECTION_EVENTS = [
 
 let nextPeerConnectionId = 0;
 
+let log = console.log.bind(console);
+
 export default class RTCPeerConnection extends EventTarget(PEER_CONNECTION_EVENTS) {
   localDescription: RTCSessionDescription;
   remoteDescription: RTCSessionDescription;
@@ -122,7 +124,7 @@ export default class RTCPeerConnection extends EventTarget(PEER_CONNECTION_EVENT
     WebRTCModule.peerConnectionRemoveStream(stream.reactTag, this._peerConnectionId);
   }
 
-  /**
+  /*
    * Merge custom constraints with the default one. The custom one take precedence.
    *
    * @param {Object} options - webrtc constraints
@@ -139,20 +141,21 @@ export default class RTCPeerConnection extends EventTarget(PEER_CONNECTION_EVENT
         constraints.optional = options.optional.concat(constraints.optional);
       }
     }
-    return constraints;
   }
 
-  createOffer(successCallback: ?Function, failureCallback: ?Function, options) {
-    WebRTCModule.peerConnectionCreateOffer(
-        this._peerConnectionId,
-        this._mergeMediaConstraints(options),
-        (successful, data) => {
+  createOffer(success: ?Function, failure: ?Function, constraints) {
+    return new Promise((resolve, reject) => {
+      WebRTCModule.peerConnectionCreateOffer(
+        this._peerConnectionId
+      , this._mergeMediaConstraints(options)
+      , (successful, data) => {
           if (successful) {
-            successCallback(new RTCSessionDescription(data));
+            resolve( new RTCSessionDescription(data));
           } else {
-            failureCallback(data); // TODO: convert to NavigatorUserMediaError
+            reject(data); // TODO: convert to NavigatorUserMediaError
           }
         });
+    });
   }
 
   createAnswer(successCallback: ?Function, failureCallback: ?Function, options) {
@@ -173,7 +176,9 @@ export default class RTCPeerConnection extends EventTarget(PEER_CONNECTION_EVENT
   }
 
   setLocalDescription(sessionDescription: RTCSessionDescription, success: ?Function, failure: ?Function, constraints) {
-    WebRTCModule.peerConnectionSetLocalDescription(sessionDescription.toJSON(), this._peerConnectionId, (successful, data) => {
+    WebRTCModule.peerConnectionSetLocalDescription(
+      sessionDescription.toJSON ? sessionDescription.toJSON() : sessionDescription, 
+      this._peerConnectionId, (successful, data) => {
       if (successful) {
         this.localDescription = sessionDescription;
         success();
@@ -184,7 +189,9 @@ export default class RTCPeerConnection extends EventTarget(PEER_CONNECTION_EVENT
   }
 
   setRemoteDescription(sessionDescription: RTCSessionDescription, success: ?Function, failure: ?Function) {
-    WebRTCModule.peerConnectionSetRemoteDescription(sessionDescription.toJSON(), this._peerConnectionId, (successful, data) => {
+    WebRTCModule.peerConnectionSetRemoteDescription(
+      sessionDescription.toJSON ? sessionDescription.toJSON() : sessionDescription, 
+      this._peerConnectionId, (successful, data) => {
       if (successful) {
         this.remoteDescription = sessionDescription;
         success();
