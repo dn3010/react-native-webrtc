@@ -54,6 +54,8 @@ const PEER_CONNECTION_EVENTS = [
 
 let nextPeerConnectionId = 0;
 
+let log = console.log.bind(console);
+
 export default class RTCPeerConnection extends EventTarget(PEER_CONNECTION_EVENTS) {
   localDescription: RTCSessionDescription;
   remoteDescription: RTCSessionDescription;
@@ -98,13 +100,17 @@ export default class RTCPeerConnection extends EventTarget(PEER_CONNECTION_EVENT
   }
 
   createOffer(success: ?Function, failure: ?Function, constraints) {
-    WebRTCModule.peerConnectionCreateOffer(this._peerConnectionId, (successful, data) => {
-      if (successful) {
-        const sessionDescription = new RTCSessionDescription(data);
-        success(sessionDescription);
-      } else {
-        failure(data); // TODO: convert to NavigatorUserMediaError
-      }
+    return new Promise((resolve, reject) => {
+      WebRTCModule.peerConnectionCreateOffer(
+        this._peerConnectionId
+      //, constraints
+      , (successful, data) => {
+          if (successful) {
+            resolve( new RTCSessionDescription(data));
+          } else {
+            reject(data); // TODO: convert to NavigatorUserMediaError
+          }
+        })
     });
   }
 
@@ -124,7 +130,9 @@ export default class RTCPeerConnection extends EventTarget(PEER_CONNECTION_EVENT
   }
 
   setLocalDescription(sessionDescription: RTCSessionDescription, success: ?Function, failure: ?Function, constraints) {
-    WebRTCModule.peerConnectionSetLocalDescription(sessionDescription.toJSON(), this._peerConnectionId, (successful, data) => {
+    WebRTCModule.peerConnectionSetLocalDescription(
+      sessionDescription.toJSON ? sessionDescription.toJSON() : sessionDescription, 
+      this._peerConnectionId, (successful, data) => {
       if (successful) {
         this.localDescription = sessionDescription;
         success();
@@ -135,7 +143,9 @@ export default class RTCPeerConnection extends EventTarget(PEER_CONNECTION_EVENT
   }
 
   setRemoteDescription(sessionDescription: RTCSessionDescription, success: ?Function, failure: ?Function) {
-    WebRTCModule.peerConnectionSetRemoteDescription(sessionDescription.toJSON(), this._peerConnectionId, (successful, data) => {
+    WebRTCModule.peerConnectionSetRemoteDescription(
+      sessionDescription.toJSON ? sessionDescription.toJSON() : sessionDescription, 
+      this._peerConnectionId, (successful, data) => {
       if (successful) {
         this.remoteDescription = sessionDescription;
         success();
