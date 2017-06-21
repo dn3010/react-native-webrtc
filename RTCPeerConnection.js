@@ -68,6 +68,8 @@ const PEER_CONNECTION_EVENTS = [
 
 let nextPeerConnectionId = 0;
 
+let log = console.log.bind(console);
+
 export default class RTCPeerConnection extends EventTarget(PEER_CONNECTION_EVENTS) {
   localDescription: RTCSessionDescription;
   remoteDescription: RTCSessionDescription;
@@ -120,15 +122,14 @@ export default class RTCPeerConnection extends EventTarget(PEER_CONNECTION_EVENT
   createOffer(options) {
     return new Promise((resolve, reject) => {
       WebRTCModule.peerConnectionCreateOffer(
-        this._peerConnectionId,
-        RTCUtil.mergeMediaConstraints(options, DEFAULT_SDP_CONSTRAINTS),
-        (successful, data) => {
+        this._peerConnectionId
+      , (successful, data) => {
           if (successful) {
-            resolve(new RTCSessionDescription(data));
+            resolve( new RTCSessionDescription(data));
           } else {
             reject(data); // TODO: convert to NavigatorUserMediaError
           }
-        });
+        })
     });
   }
 
@@ -151,35 +152,30 @@ export default class RTCPeerConnection extends EventTarget(PEER_CONNECTION_EVENT
     WebRTCModule.peerConnectionSetConfiguration(configuration, this._peerConnectionId);
   }
 
+
   setLocalDescription(sessionDescription: RTCSessionDescription) {
-    return new Promise((resolve, reject) => {
-      WebRTCModule.peerConnectionSetLocalDescription(
-        sessionDescription.toJSON ? sessionDescription.toJSON() : sessionDescription,
-        this._peerConnectionId,
-        (successful, data) => {
-          if (successful) {
-            this.localDescription = sessionDescription;
-            resolve();
-          } else {
-            reject(data);
-          }
-      });
+    WebRTCModule.peerConnectionSetLocalDescription(
+      sessionDescription.toJSON ? sessionDescription.toJSON() : sessionDescription,
+      this._peerConnectionId, (successful, data) => {
+      if (successful) {
+        this.localDescription = sessionDescription;
+        success();
+      } else {
+        failure(data);
+      }
     });
   }
 
   setRemoteDescription(sessionDescription: RTCSessionDescription) {
-    return new Promise((resolve, reject) => {
-      WebRTCModule.peerConnectionSetRemoteDescription(
-        sessionDescription.toJSON ? sessionDescription.toJSON() : sessionDescription,
-        this._peerConnectionId,
-        (successful, data) => {
-          if (successful) {
-            this.remoteDescription = sessionDescription;
-            resolve();
-          } else {
-            reject(data);
-          }
-      });
+    WebRTCModule.peerConnectionSetRemoteDescription(
+      sessionDescription.toJSON ? sessionDescription.toJSON() : sessionDescription, 
+      this._peerConnectionId, (successful, data) => {
+      if (successful) {
+        this.remoteDescription = sessionDescription;
+        success();
+      } else {
+        failure(data);
+      }
     });
   }
 
