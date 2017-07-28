@@ -37,6 +37,11 @@ typedef NS_ENUM(NSInteger, RTCVideoViewObjectFit) {
    * the element's entire content box.
    */
   RTCVideoViewObjectFitCover
+  /**
+   * The cover-or-contain value will attempt to use cover to respect aspect ratio,
+   * unless there is a mismatch in orientation between the display and the incoming video
+   */
+  RTCVideoViewObjectFitCoverOrContain
 };
 
 /**
@@ -159,6 +164,28 @@ typedef NS_ENUM(NSInteger, RTCVideoViewObjectFit) {
     newValue = self.bounds;
     // Is there a real need to scale subview?
     if (newValue.size.width != width || newValue.size.height != height) {
+      CGFloat scaleFactor
+        = MAX(newValue.size.width / width, newValue.size.height / height);
+      // Scale both width and height in order to make it obvious that the aspect
+      // ratio is preserved.
+      width *= scaleFactor;
+      height *= scaleFactor;
+      newValue.origin.x += (newValue.size.width - width) / 2.0;
+      newValue.origin.y += (newValue.size.height - height) / 2.0;
+      newValue.size.width = width;
+      newValue.size.height = height;
+    }
+  } else if (RTCVideoViewObjectFitCoverOrContain == self.objectFit) {
+    newValue = self.bounds;
+    
+    // Check for mismatch in orientation
+    if (newValue.size.width / newValue.size.height >= 1 && width / height < 1
+      || newValue.size.width / newValue.size.height < 1 && width / height >= 1) {
+      newValue
+        = AVMakeRectWithAspectRatioInsideRect(
+            CGSizeMake(width, height),
+            self.bounds);
+    } else if (newValue.size.width != width || newValue.size.height != height) {
       CGFloat scaleFactor
         = MAX(newValue.size.width / width, newValue.size.height / height);
       // Scale both width and height in order to make it obvious that the aspect
@@ -335,6 +362,8 @@ RCT_CUSTOM_VIEW_PROPERTY(objectFit, NSString *, RTCVideoView) {
   RTCVideoViewObjectFit e
     = (s && [s isEqualToString:@"cover"])
       ? RTCVideoViewObjectFitCover
+      : [s isEqualToString:@"cover-or-contain"]
+      ? RTCVideoViewObjectFitCoverOrContain
       : RTCVideoViewObjectFitContain;
 
   view.objectFit = e;
