@@ -100,6 +100,7 @@ export default class RTCPeerConnection extends EventTarget(PEER_CONNECTION_EVENT
   onremovestream: ?Function;
 
   _peerConnectionId: number;
+  _localStreams: Array<MediaStream> = [];
   _remoteStreams: Array<MediaStream> = [];
   _subscriptions: Array<any>;
 
@@ -127,10 +128,15 @@ export default class RTCPeerConnection extends EventTarget(PEER_CONNECTION_EVENT
 
   addStream(stream: MediaStream) {
     WebRTCModule.peerConnectionAddStream(stream.reactTag, this._peerConnectionId);
+    this._localStreams.push(stream);
   }
 
   removeStream(stream: MediaStream) {
     WebRTCModule.peerConnectionRemoveStream(stream.reactTag, this._peerConnectionId);
+    let index = this._localStreams.indexOf(stream);
+    if (index !== -1) {
+      this._localStreams.splice(index, 1);
+    }
   }
 
   createOffer(options) {
@@ -203,6 +209,10 @@ export default class RTCPeerConnection extends EventTarget(PEER_CONNECTION_EVENT
     } else {
       console.warn('RTCPeerConnection getStats not supported');
     }
+  }
+
+  getLocalStreams() {
+    return this._localStreams.slice();
   }
 
   getRemoteStreams() {
