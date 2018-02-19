@@ -26,7 +26,7 @@ const RTCView = {
      * and https://www.w3.org/TR/html5/rendering.html#video-object-fit,
      * resembles the CSS style object-fit.
      */
-    objectFit: PropTypes.oneOf(['contain', 'cover']),
+    objectFit: PropTypes.oneOf(['contain', 'cover', 'cover-or-contain']),
 
     streamURL: PropTypes.string,
 
