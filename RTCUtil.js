@@ -20,6 +20,9 @@ export function mergeMediaConstraints(custom, def) {
     if (custom.facingMode) {
       constraints.facingMode = custom.facingMode.toString(); // string, 'user' or the default 'environment'
     }
+    if (custom.iceRestart) {
+      constraints.mandatory = {...constraints.mandatory, IceRestart: true };
+    }
   }
   return constraints;
 }
