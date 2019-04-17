@@ -195,6 +195,8 @@ public class WebRTCView extends ViewGroup {
     private VideoTrack getVideoTrack() {
         VideoTrack videoTrack = this.videoTrack;
 
+        if (this.streamURL == null) return null;
+
         // XXX If WebRTCModule#mediaStreamTrackRelease has already been invoked
         // on videoTrack, then it is no longer safe to call methods (e.g.
         // addRenderer, removeRenderer) on videoTrack.
