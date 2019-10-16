@@ -436,6 +436,7 @@ RCT_EXPORT_METHOD(peerConnectionGetStats:(nonnull NSString *)trackID
 }
 
 - (void)peerConnection:(RTCPeerConnection *)peerConnection didRemoveStream:(RTCMediaStream *)stream {
+  NSArray *keysArray = [self peerConnection:peerConnection allStreamReactTagsForStream:stream];
   // XXX Find the stream by comparing the 'streamId' values. It turns out that WebRTC (as of M69) creates new wrapper
   // instance for the native media stream before invoking the 'didRemoveStream' callback. This means it's a different
   // RTCMediaStream instance passed to 'didAddStream' and 'didRemoveStream'.
@@ -462,7 +463,18 @@ RCT_EXPORT_METHOD(peerConnectionGetStats:(nonnull NSString *)trackID
   [self.bridge.eventDispatcher sendDeviceEventWithName:@"peerConnectionRemovedStream" body:
    @{@"id": peerConnection.reactTag, @"streamId": streamReactTag}];
 }
+- (NSArray<NSString *> *)peerConnection:(RTCPeerConnection *)peerConnection allStreamReactTagsForStream:(RTCMediaStream *)stream {
+  NSMutableArray *ary = [NSMutableArray array];
 
+  for (NSString *key in peerConnection.remoteStreams.allKeys) {
+    RTCMediaStream *s = peerConnection.remoteStreams[key];
+    if ([s.streamId isEqualToString:stream.streamId]) {
+      [ary addObject:key];
+    }
+  }
+
+  return ary;
+}
 - (void)peerConnectionShouldNegotiate:(RTCPeerConnection *)peerConnection {
   [self.bridge.eventDispatcher sendDeviceEventWithName:@"peerConnectionOnRenegotiationNeeded" body:
    @{@"id": peerConnection.reactTag}];
